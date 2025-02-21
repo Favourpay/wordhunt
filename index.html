@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Hunt Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 50px;
+            position: relative;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            position: relative;
+        }
+        .stage-level {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #0fac81;
+        }
+        .letters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .letter {
+            padding: 15px;
+            font-size: 24px;
+            background-color: #0fac81;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        #dropZone {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            min-width: 200px;
+            flex-wrap: wrap;
+        }
+        .word-box {
+            min-height: 50px;
+            min-width: 100px;
+            border: 2px dashed #0fac81;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        #timer {
+            font-size: 20px;
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Hunt Game</h1>
+        <p class="stage-level" id="stage">Stage: 1</p>
+        <p id="timer">Time Left: 30s</p>
+        <div class="letters" id="letters"></div>
+        <div id="dropZone" class="word-box"></div>
+        <br>
+        <button id="submitBtn" onclick="checkWord()">Submit</button>
+        <p id="result"></p>
+        <p id="correctWord" style="display:none; color:blue;"></p>
+    </div>
+
+    <script>
+        let words = ["Steam", "Amazon", "Apple", "Roblox", "Sephora"];
+        let stage = 0;
+        let timeLeft;
+        let timerInterval;
+        let gameActive = true;
+
+        function startGame() {
+            if (stage >= words.length) {
+                document.getElementById("result").innerText = "🏆 Congratulations! You completed all stages!";
+                return;
+            }
+
+            gameActive = true;
+            document.getElementById("stage").innerText = `Stage: ${stage + 1}`;
+            document.getElementById("result").innerText = "";
+            document.getElementById("dropZone").innerHTML = "";
+            document.getElementById("letters").innerHTML = "";
+            document.getElementById("correctWord").style.display = "none";
+            
+            let selectedWord = words[stage];
+            let scrambledLetters = selectedWord.split('').sort(() => Math.random() - 0.5);
+            timeLeft = 30 - (stage * 5);
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+            
+            scrambledLetters.forEach(letter => {
+                let span = document.createElement("span");
+                span.innerText = letter;
+                span.classList.add("letter");
+                span.addEventListener("click", () => selectLetter(span));
+                document.getElementById("letters").appendChild(span);
+            });
+            
+            clearInterval(timerInterval);
+            startTimer();
+        }
+
+        function selectLetter(element) {
+            if (!gameActive) return;
+            let dropZone = document.getElementById("dropZone");
+            let span = document.createElement("span");
+            span.innerText = element.innerText;
+            span.classList.add("letter");
+            dropZone.appendChild(span);
+            element.remove();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+                } else {
+                    clearInterval(timerInterval);
+                    gameActive = false;
+                    document.getElementById("result").innerText = "⏳ Time's up! You lost!";
+                    document.getElementById("result").style.color = "red";
+                    document.getElementById("correctWord").innerText = `Correct word: ${words[stage]}`;
+                    document.getElementById("correctWord").style.display = "block";
+                }
+            }, 1000);
+        }
+
+        function checkWord() {
+            if (!gameActive) return;
+            let userGuess = Array.from(document.querySelectorAll("#dropZone span")).map(span => span.innerText).join("");
+            let correctWord = words[stage];
+            let result = document.getElementById("result");
+            
+            if (userGuess === correctWord) {
+                clearInterval(timerInterval);
+                result.innerText = "🎉 Correct! Next stage!";
+                result.style.color = "green";
+                stage++;
+                setTimeout(startGame, 2000);
+            } else {
+                result.innerText = "❌ Wrong! Try again.";
+                result.style.color = "red";
+            }
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
